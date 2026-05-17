@@ -3,6 +3,8 @@ package lk.ac.sliit.bakery_site.service;
 import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.repository.ProductRepository;
+import lk.ac.sliit.bakery_site.model.Reservation;
+import lk.ac.sliit.bakery_site.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,15 +17,15 @@ import java.util.Map;
 public class AdminService implements IAdminService {
 
     private final ProductRepository productRepository;
-
-
-
+    private final ReservationRepository reservationRepository;
 
     public AdminService(
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            ReservationRepository reservationRepository
 
     ) {
         this.productRepository = productRepository;
+        this.reservationRepository = reservationRepository;
 
     }
 
@@ -73,7 +75,33 @@ public class AdminService implements IAdminService {
         return productRepository.save(product);
     }
 
- @Override
+    //Reservation
+    @Override
+    public List<Reservation> getReservations() {
+        return reservationRepository.findAllByOrderByIdDesc();
+    }
+
+    @Override
+    public Reservation updateReservationStatus(Long reservationId, String status) {
+        String cleanStatus = normalizeStatus(status);
+        if (!List.of("Pending", "Successful", "Cancelled").contains(cleanStatus)) {
+            throw new IllegalArgumentException("Invalid reservation status.");
+        }
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
+        reservation.setReservationStatus(cleanStatus);
+        return reservationRepository.save(reservation);
+    }
+
+    @Override
+    public void deleteReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
+        reservationRepository.delete(reservation);
+    }
+
+
+    @Override
     public List<Product> getPublicProducts() {
         return productRepository.findByActiveTrueAndStockGreaterThanOrderByIdDesc(0);
     }
