@@ -3,6 +3,7 @@ package lk.ac.sliit.bakery_site.controller;
 import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.service.IAdminService;
+import lk.ac.sliit.bakery_site.model.Reservation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,24 @@ public class AdminController {
     public Map<String, Object> importCatalogProducts() {
         int inserted = adminService.importWebsiteCatalogProducts();
         return Map.of("success", true, "inserted", inserted);
+    }
+
+    //ReservationPart
+
+    @GetMapping("/reservations")
+    public List<Reservation> reservations() {
+        return adminService.getReservations();
+    }
+
+    @PatchMapping("/reservations/{reservationId}/status")
+    public Reservation updateReservationStatus(@PathVariable Long reservationId, @RequestParam String status) {
+        return adminService.updateReservationStatus(reservationId, status);
+    }
+
+    @DeleteMapping("/reservations/{reservationId}")
+    public Map<String, Object> deleteReservation(@PathVariable Long reservationId) {
+        adminService.deleteReservation(reservationId);
+        return Map.of("success", true);
     }
 
 
