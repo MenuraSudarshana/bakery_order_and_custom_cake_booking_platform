@@ -4,6 +4,7 @@ import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.service.IAdminService;
 import lk.ac.sliit.bakery_site.model.Reservation;
+import lk.ac.sliit.bakery_site.model.CustomizeCakeOrder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,6 +58,19 @@ public class AdminController {
     public Map<String, Object> deleteReservation(@PathVariable Long reservationId) {
         adminService.deleteReservation(reservationId);
         return Map.of("success", true);
+    }
+
+
+    //Customize Cake
+
+    @GetMapping("/customize-cake-orders")
+    public List<CustomizeCakeOrder> customizeCakeOrders(@RequestParam(defaultValue = "all") String status) {
+        return adminService.getCustomizeCakeOrders(status);
+    }
+
+    @PatchMapping("/customize-cake-orders/{orderId}/status")
+    public CustomizeCakeOrder updateCustomizeCakeOrderStatus(@PathVariable Long orderId, @RequestParam String status) {
+        return adminService.updateCustomizeCakeOrderStatus(orderId, status);
     }
 
 
