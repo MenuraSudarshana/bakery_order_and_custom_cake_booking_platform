@@ -5,6 +5,8 @@ import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.repository.ProductRepository;
 import lk.ac.sliit.bakery_site.model.Reservation;
 import lk.ac.sliit.bakery_site.repository.ReservationRepository;
+import lk.ac.sliit.bakery_site.model.CustomizeCakeOrder;
+import lk.ac.sliit.bakery_site.repository.CustomizeCakeOrderRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,14 +20,17 @@ public class AdminService implements IAdminService {
 
     private final ProductRepository productRepository;
     private final ReservationRepository reservationRepository;
+    private final CustomizeCakeOrderRepository customizeCakeOrderRepository;
 
     public AdminService(
             ProductRepository productRepository,
-            ReservationRepository reservationRepository
+            ReservationRepository reservationRepository,
+            CustomizeCakeOrderRepository customizeCakeOrderRepository
 
     ) {
         this.productRepository = productRepository;
         this.reservationRepository = reservationRepository;
+        this.customizeCakeOrderRepository = customizeCakeOrderRepository;
 
     }
 
@@ -98,6 +103,41 @@ public class AdminService implements IAdminService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
         reservationRepository.delete(reservation);
+    }
+
+    //Customize Cake
+
+    @Override
+    public List<CustomizeCakeOrder> getCustomizeCakeOrders(String status) {
+        List<CustomizeCakeOrder> all = customizeCakeOrderRepository.findAll();
+        all.sort((a, b) -> Long.compare(b.getId(), a.getId()));
+        String cleanStatus = clean(status);
+        if (cleanStatus.isEmpty() || cleanStatus.equalsIgnoreCase("all")) {
+            return all;
+        }
+        return all.stream()
+                .filter(order -> cleanStatus.equalsIgnoreCase(order.getOrderStatus()))
+                .toList();
+    }
+
+    @Override
+    public CustomizeCakeOrder updateCustomizeCakeOrderStatus(Long orderId, String status) {
+        String cleanStatus = normalizeStatus(status);
+        if (!List.of("Pending", "Successful", "Cancelled").contains(cleanStatus)) {
+            throw new IllegalArgumentException("Invalid custom cake order status.");
+        }
+        CustomizeCakeOrder order = customizeCakeOrderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Custom cake order not found."));
+        order.setOrderStatus(cleanStatus);
+        if (cleanStatus.equalsIgnoreCase("Cancelled")) {
+            order.setCancelRequested(false);
+        }
+        if (cleanStatus.equalsIgnoreCase("Pending")) {
+            order.setCancelRequested(false);
+        }
+        order.setUpdateRequested(false);
+        order.setUpdateRequestNote(null);
+        return customizeCakeOrderRepository.save(order);
     }
 
 
