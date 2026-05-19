@@ -4,6 +4,7 @@ import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.service.IAdminService;
 import lk.ac.sliit.bakery_site.model.Reservation;
+import lk.ac.sliit.bakery_site.model.CustomerOrder;
 import lk.ac.sliit.bakery_site.model.CustomizeCakeOrder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,19 @@ public class AdminController {
         int inserted = adminService.importWebsiteCatalogProducts();
         return Map.of("success", true, "inserted", inserted);
     }
+
+    //OrderPart
+
+    @GetMapping("/orders")
+    public List<CustomerOrder> orders(@RequestParam(defaultValue = "all") String status) {
+        return adminService.getOrders(status);
+    }
+
+    @PatchMapping("/orders/{orderId}/status")
+    public CustomerOrder updateOrderStatus(@PathVariable Integer orderId, @RequestParam String status) {
+        return adminService.updateOrderStatus(orderId, status);
+    }
+
 
     //ReservationPart
 

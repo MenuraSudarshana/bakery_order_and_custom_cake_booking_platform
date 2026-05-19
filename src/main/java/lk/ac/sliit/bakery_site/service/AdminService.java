@@ -1,6 +1,8 @@
 package lk.ac.sliit.bakery_site.service;
 
 import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
+import lk.ac.sliit.bakery_site.model.CustomerOrder;
+import lk.ac.sliit.bakery_site.repository.CustomerOrderRepository;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.repository.ProductRepository;
 import lk.ac.sliit.bakery_site.model.Reservation;
@@ -19,16 +21,19 @@ import java.util.Map;
 public class AdminService implements IAdminService {
 
     private final ProductRepository productRepository;
+    private final CustomerOrderRepository customerOrderRepository;
     private final ReservationRepository reservationRepository;
     private final CustomizeCakeOrderRepository customizeCakeOrderRepository;
 
     public AdminService(
             ProductRepository productRepository,
+            CustomerOrderRepository customerOrderRepository,
             ReservationRepository reservationRepository,
             CustomizeCakeOrderRepository customizeCakeOrderRepository
 
     ) {
         this.productRepository = productRepository;
+        this.customerOrderRepository = customerOrderRepository;
         this.reservationRepository = reservationRepository;
         this.customizeCakeOrderRepository = customizeCakeOrderRepository;
 
@@ -38,6 +43,8 @@ public class AdminService implements IAdminService {
     public Map<String, Object> getSummary() {
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("totalProducts", productRepository.countByActiveTrue());
+        summary.put("pendingOrders", customerOrderRepository.countByOrderStatusIgnoreCase("Pending"));
+        summary.put("successfulOrders", customerOrderRepository.countByOrderStatusIgnoreCase("Successful"));
 
         return summary;
     }
@@ -78,6 +85,28 @@ public class AdminService implements IAdminService {
         product.setActive(active);
         product.setUpdatedAt(LocalDateTime.now().toString());
         return productRepository.save(product);
+    }
+
+    //Orders
+    @Override
+    public List<CustomerOrder> getOrders(String status) {
+        String cleanStatus = clean(status);
+        if (cleanStatus.isEmpty() || cleanStatus.equalsIgnoreCase("all")) {
+            return customerOrderRepository.findAllByOrderByIdDesc();
+        }
+        return customerOrderRepository.findByOrderStatusIgnoreCaseOrderByIdDesc(cleanStatus);
+    }
+
+    @Override
+    public CustomerOrder updateOrderStatus(Integer orderId, String status) {
+        String cleanStatus = normalizeStatus(status);
+        if (!List.of("Pending", "Successful", "Cancelled").contains(cleanStatus)) {
+            throw new IllegalArgumentException("Invalid order status.");
+        }
+        CustomerOrder order = customerOrderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found."));
+        order.setOrderStatus(cleanStatus);
+        return customerOrderRepository.save(order);
     }
 
     //Reservation

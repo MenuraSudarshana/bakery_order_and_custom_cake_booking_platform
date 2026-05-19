@@ -1,6 +1,7 @@
 package lk.ac.sliit.bakery_site.service;
 
 import lk.ac.sliit.bakery_site.dto.AdminProductCreateRequestDto;
+import lk.ac.sliit.bakery_site.model.CustomerOrder;
 import lk.ac.sliit.bakery_site.model.Product;
 import lk.ac.sliit.bakery_site.model.Reservation;
 import lk.ac.sliit.bakery_site.model.CustomizeCakeOrder;
@@ -21,6 +22,12 @@ public interface IAdminService {
     Product updateProduct(Integer productId, AdminProductCreateRequestDto request);
 
     Product updateProductActive(Integer productId, boolean active);
+
+    //OrderPart
+    List<CustomerOrder> getOrders(String status);
+
+    CustomerOrder updateOrderStatus(Integer orderId, String status);
+
 
     //RsevationPart
     List<Reservation> getReservations();
